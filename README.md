@@ -14,6 +14,7 @@ A desktop-based Library Management System developed using Python, Tkinter, and S
 - **Categorization**: Organize books by types (History, Fiction, Science, Biography, etc.).
 - **Search Functionality**: Quickly find books by Title, Author, or Category.
 - **Data Persistence**: Records are stored locally in a SQLite database (`library.db`).
+- **Proper Error Handling**: check if any parts are missing
 - **Clean UI**: User-friendly desktop interface with technical IDs hidden for a professional look.
 
 ## Technologies Used
