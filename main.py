@@ -22,6 +22,7 @@ class LibrarySystem:
         self.publisher_var = tk.StringVar()
         self.year_var = tk.StringVar()
         self.category_var = tk.StringVar()
+        self.quantity_var = tk.StringVar()
         self.search_var = tk.StringVar()
 
         # UI Components
@@ -60,6 +61,9 @@ class LibrarySystem:
         self.category_combo.grid(row=4, column=1, pady=5)
         self.category_combo.set("Other")
 
+        tk.Label(form_frame, text="Quantity:", font=("Arial", 10)).grid(row=5, column=0, sticky="w", pady=5)
+        tk.Entry(form_frame, textvariable=self.quantity_var, font=("Arial", 10), width=35).grid(row=5, column=1, pady=5)
+
         # Right Frame: Table
         table_frame = tk.Frame(main_frame)
         table_frame.grid(row=0, column=1, sticky="nsew")
@@ -73,15 +77,16 @@ class LibrarySystem:
         tk.Button(search_frame, text="Search", command=self.search_books, width=10).pack(side=tk.LEFT)
         tk.Button(search_frame, text="Clear", command=self.display_all, width=10).pack(side=tk.LEFT, padx=5)
 
-        # Treeview (Displaying Title, Author, Publisher, Year, Category)
+        # Treeview (Displaying Title, Author, Publisher, Year, Category, Quantity)
         # ID is included in columns but we won't show it to the user.
-        self.tree = ttk.Treeview(table_frame, columns=("ID", "Title", "Author", "Publisher", "Year", "Category"), show="headings")
+        self.tree = ttk.Treeview(table_frame, columns=("ID", "Title", "Author", "Publisher", "Year", "Category", "Quantity"), show="headings")
         
         self.tree.heading("Title", text="Title")
         self.tree.heading("Author", text="Author")
         self.tree.heading("Publisher", text="Publisher")
         self.tree.heading("Year", text="Year")
         self.tree.heading("Category", text="Category")
+        self.tree.heading("Quantity", text="Quantity")
         
         # Hide ID column
         self.tree.heading("ID", text="")
@@ -92,6 +97,7 @@ class LibrarySystem:
         self.tree.column("Publisher", width=150)
         self.tree.column("Year", width=80)
         self.tree.column("Category", width=100)
+        self.tree.column("Quantity", width=80)
 
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.tree.bind("<<TreeviewSelect>>", self.get_selected_row)
@@ -130,9 +136,14 @@ class LibrarySystem:
         publisher = self.publisher_var.get().strip()
         year = self.year_var.get().strip()
         category = self.category_var.get()
+        quantity = self.quantity_var.get().strip()
 
-        if not all([title, author, publisher, year, category]):
+        if not all([title, author, publisher, year, category, quantity]):
             messagebox.showerror("Input Error", "All fields are required!")
+            return
+        
+        if not quantity.isdigit():
+            messagebox.showerror("Input Error", "Quantity must be a number!")
             return
 
         try:
@@ -159,7 +170,7 @@ class LibrarySystem:
                     if not messagebox.askyesno("Potential Duplicate", msg):
                         return
 
-            self.db.add_book(title, author, publisher, year, category)
+            self.db.add_book(title, author, publisher, year, category, int(quantity))
             messagebox.showinfo("Success", "Record added successfully!")
             self.clear_fields()
             self.display_all()
@@ -178,6 +189,7 @@ class LibrarySystem:
             self.publisher_var.set(data[3])
             self.year_var.set(data[4])
             self.category_var.set(data[5])
+            self.quantity_var.set(data[6])
 
     def update_book(self):
         book_id = self.id_var.get()
@@ -187,6 +199,11 @@ class LibrarySystem:
         
         try:
             title, author = self.title_var.get().strip(), self.author_var.get().strip()
+            quantity = self.quantity_var.get().strip()
+
+            if not quantity.isdigit():
+                messagebox.showerror("Input Error", "Quantity must be a number!")
+                return
             
             # Similar check for update
             similar_results = self.db.get_similar_books(title, author)
@@ -213,7 +230,7 @@ class LibrarySystem:
                         return
 
             self.db.update_book(book_id, title, self.author_var.get(), 
-                               self.publisher_var.get(), self.year_var.get(), self.category_var.get())
+                               self.publisher_var.get(), self.year_var.get(), self.category_var.get(), int(quantity))
             messagebox.showinfo("Success", "Record updated successfully!")
             self.clear_fields()
             self.display_all()
@@ -259,6 +276,7 @@ class LibrarySystem:
         self.publisher_var.set("")
         self.year_var.set("")
         self.category_var.set("Other")
+        self.quantity_var.set("")
 
 if __name__ == "__main__":
     root = tk.Tk()

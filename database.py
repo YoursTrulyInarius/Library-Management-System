@@ -23,14 +23,18 @@ class Database:
                     author TEXT NOT NULL,
                     publisher TEXT NOT NULL,
                     year TEXT NOT NULL,
-                    category TEXT NOT NULL DEFAULT 'Other'
+                    category TEXT NOT NULL DEFAULT 'Other',
+                    quantity INTEGER NOT NULL DEFAULT 1
                 )
             """)
-            # Check if category column exists (for migration)
+            # Check for column migrations
             self.cur.execute("PRAGMA table_info(books)")
             columns = [column[1] for column in self.cur.fetchall()]
+            
             if 'category' not in columns:
                 self.cur.execute("ALTER TABLE books ADD COLUMN category TEXT NOT NULL DEFAULT 'Other'")
+            if 'quantity' not in columns:
+                self.cur.execute("ALTER TABLE books ADD COLUMN quantity INTEGER NOT NULL DEFAULT 1")
             
             self.conn.commit()
         except sqlite3.Error as e:
@@ -45,13 +49,13 @@ class Database:
             logging.error(f"Error checking duplicates: {e}")
             return False
 
-    def add_book(self, title, author, publisher, year, category):
+    def add_book(self, title, author, publisher, year, category, quantity):
         if self.check_duplicate(title, author):
             raise ValueError(f"A book with title '{title}' by '{author}' already exists.")
         
         try:
-            self.cur.execute("INSERT INTO books (title, author, publisher, year, category) VALUES (?, ?, ?, ?, ?)",
-                             (title, author, publisher, year, category))
+            self.cur.execute("INSERT INTO books (title, author, publisher, year, category, quantity) VALUES (?, ?, ?, ?, ?, ?)",
+                             (title, author, publisher, year, category, quantity))
             self.conn.commit()
         except sqlite3.Error as e:
             logging.error(f"Error adding book: {e}")
@@ -75,7 +79,7 @@ class Database:
             self.conn.rollback()
             raise
 
-    def update_book(self, book_id, title, author, publisher, year, category):
+    def update_book(self, book_id, title, author, publisher, year, category, quantity):
         try:
             # Check if another book with same title/author exists (excluding this ID)
             self.cur.execute("SELECT * FROM books WHERE title=? AND author=? AND id!=?", (title, author, book_id))
@@ -83,8 +87,8 @@ class Database:
                 raise ValueError(f"Another book with title '{title}' by '{author}' already exists.")
 
             self.cur.execute("""
-                UPDATE books SET title=?, author=?, publisher=?, year=?, category=? WHERE id=?
-            """, (title, author, publisher, year, category, book_id))
+                UPDATE books SET title=?, author=?, publisher=?, year=?, category=?, quantity=? WHERE id=?
+            """, (title, author, publisher, year, category, quantity, book_id))
             self.conn.commit()
         except sqlite3.Error as e:
             logging.error(f"Error updating book: {e}")
