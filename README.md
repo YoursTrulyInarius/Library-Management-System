@@ -8,13 +8,18 @@ A desktop-based Library Management System developed using Python, Tkinter, and S
 ## Features
 
 - **Book Management**: Add, View, Update, and Delete book records.
-- **Advanced Duplicate Prevention**:
+- **Robust Duplicate Prevention**:
+    - **Case-Insensitive Check**: Prevents adding the same book even with different capitalization.
     - **Hard Block**: Automatically rejects entries with >90% similarity (e.g., typos like "Horry Potter").
     - **Fuzzy Warnings**: Alerts users of potential duplicates (70-90% similarity) for series or sequels.
+- **Strict Input Validation**:
+    - All fields are mandatory.
+    - **Year**: Must be a 4-digit number.
+    - **Quantity**: Must be a positive integer (at least 1).
 - **Categorization**: Organize books by types (History, Fiction, Science, Biography, etc.).
 - **Search Functionality**: Quickly find books by Title, Author, or Category.
 - **Data Persistence**: Records are stored locally in a SQLite database (`library.db`).
-- **Proper Error Handling**: check if any parts are missing
+- **Comprehensive Error Handling**: Built-in protection against database errors and invalid user input.
 - **Clean UI**: User-friendly desktop interface with technical IDs hidden for a professional look.
 
 ## Technologies Used

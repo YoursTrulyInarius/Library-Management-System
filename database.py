@@ -41,9 +41,12 @@ class Database:
             logging.error(f"Error creating/updating table: {e}")
             self.conn.rollback()
 
-    def check_duplicate(self, title, author):
+    def check_duplicate(self, title, author, exclude_id=None):
         try:
-            self.cur.execute("SELECT * FROM books WHERE title=? AND author=?", (title, author))
+            if exclude_id:
+                self.cur.execute("SELECT id FROM books WHERE LOWER(title)=LOWER(?) AND LOWER(author)=LOWER(?) AND id!=?", (title, author, exclude_id))
+            else:
+                self.cur.execute("SELECT id FROM books WHERE LOWER(title)=LOWER(?) AND LOWER(author)=LOWER(?)", (title, author))
             return self.cur.fetchone() is not None
         except sqlite3.Error as e:
             logging.error(f"Error checking duplicates: {e}")
@@ -60,7 +63,7 @@ class Database:
         except sqlite3.Error as e:
             logging.error(f"Error adding book: {e}")
             self.conn.rollback()
-            raise
+            raise RuntimeError(f"Database error while adding book: {e}")
 
     def fetch_records(self):
         try:
@@ -82,8 +85,7 @@ class Database:
     def update_book(self, book_id, title, author, publisher, year, category, quantity):
         try:
             # Check if another book with same title/author exists (excluding this ID)
-            self.cur.execute("SELECT * FROM books WHERE title=? AND author=? AND id!=?", (title, author, book_id))
-            if self.cur.fetchone():
+            if self.check_duplicate(title, author, exclude_id=book_id):
                 raise ValueError(f"Another book with title '{title}' by '{author}' already exists.")
 
             self.cur.execute("""
@@ -93,7 +95,7 @@ class Database:
         except sqlite3.Error as e:
             logging.error(f"Error updating book: {e}")
             self.conn.rollback()
-            raise
+            raise RuntimeError(f"Database error while updating book: {e}")
 
     def search_books(self, query):
         try:

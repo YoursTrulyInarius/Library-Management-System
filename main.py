@@ -142,8 +142,12 @@ class LibrarySystem:
             messagebox.showerror("Input Error", "All fields are required!")
             return
         
-        if not quantity.isdigit():
-            messagebox.showerror("Input Error", "Quantity must be a number!")
+        if not year.isdigit() or len(year) != 4:
+            messagebox.showerror("Input Error", "Year must be a 4-digit number!")
+            return
+
+        if not quantity.isdigit() or int(quantity) < 1:
+            messagebox.showerror("Input Error", "Quantity must be a positive number (at least 1)!")
             return
 
         try:
@@ -174,8 +178,10 @@ class LibrarySystem:
             messagebox.showinfo("Success", "Record added successfully!")
             self.clear_fields()
             self.display_all()
+        except ValueError as ve:
+            messagebox.showwarning("Duplicate Record", str(ve))
         except Exception as e:
-            messagebox.showerror("Database Error", f"An unexpected error occurred: {e}")
+            messagebox.showerror("Error", f"An unexpected error occurred: {e}")
 
     def get_selected_row(self, event):
         selected_item = self.tree.focus()
@@ -198,11 +204,23 @@ class LibrarySystem:
             return
         
         try:
-            title, author = self.title_var.get().strip(), self.author_var.get().strip()
+            title = self.title_var.get().strip()
+            author = self.author_var.get().strip()
+            publisher = self.publisher_var.get().strip()
+            year = self.year_var.get().strip()
+            category = self.category_var.get()
             quantity = self.quantity_var.get().strip()
 
-            if not quantity.isdigit():
-                messagebox.showerror("Input Error", "Quantity must be a number!")
+            if not all([title, author, publisher, year, category, quantity]):
+                messagebox.showerror("Input Error", "All fields are required!")
+                return
+
+            if not year.isdigit() or len(year) != 4:
+                messagebox.showerror("Input Error", "Year must be a 4-digit number!")
+                return
+
+            if not quantity.isdigit() or int(quantity) < 1:
+                messagebox.showerror("Input Error", "Quantity must be a positive number (at least 1)!")
                 return
             
             # Similar check for update
@@ -229,15 +247,14 @@ class LibrarySystem:
                                               f"The new title is similar to:\n- {similar_list}\n\nProceed anyway?"):
                         return
 
-            self.db.update_book(book_id, title, self.author_var.get(), 
-                               self.publisher_var.get(), self.year_var.get(), self.category_var.get(), int(quantity))
+            self.db.update_book(book_id, title, author, publisher, year, category, int(quantity))
             messagebox.showinfo("Success", "Record updated successfully!")
             self.clear_fields()
             self.display_all()
         except ValueError as ve:
             messagebox.showwarning("Duplicate Record", str(ve))
         except Exception as e:
-            messagebox.showerror("Database Error", f"An unexpected error occurred: {e}")
+            messagebox.showerror("Error", f"An unexpected error occurred: {e}")
 
     def delete_book(self):
         book_id = self.id_var.get()
